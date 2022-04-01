@@ -74,7 +74,7 @@ async def WL(ctx):
     print(f'user id: {ctx.author.id}')
     uuid = get_uuid(ctx.author.id)
     if (uuid):
-      message = f'Please visit https://forms.gle/VbEbptp6zq1RPns59 to fill out the WL form\nYour Verify Code is: {uuid}'
+      message = f'Please visit https://forms.gle/VbEbptp6zq1RPns59 to fill out the WL form\nYour Verify Code is:\n{uuid}\nPlease do not share this code or your entry may be invalidated!'
     else:
       message = f'Sorry you are not on the whitelist!'
     try:
