@@ -18,9 +18,9 @@ creds_dict = json.loads(json_creds)
 creds_dict["private_key"] = creds_dict["private_key"].replace("\\\\n", "\n")
 
 sa = gspread.service_account_from_dict(creds_dict)
-sh = sa.open("DB Test")
+sh = sa.open("Quillion CRO Whitelist")
 
-wks_db = sh.worksheet("DB")
+wks_db = sh.worksheet("UUID Table")
 wks_db_records = {}
 names = {}
 uuids = {}
