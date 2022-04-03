@@ -73,8 +73,11 @@ def update_db():
       if wks_db_records != records:
         wks_db_records = records
         print("Debug: Records list has changed")
-        uuids = {d['ID']:d['UUID'] for d in wks_db_records}
-        names = {d['ID']:d['Name'] for d in wks_db_records}
+        for d in wks_db_records:
+          if not d['ID'] == "":
+            uuids[d['ID']] = d['UUID']
+            names[d['ID']] = d['Name']
+        print(f'uuids: {len(uuids.keys())} | names: {len(names.keys())}')
       else:
         print("Debug: No records have been changed")
 
@@ -134,4 +137,6 @@ async def rolecheck(ctx, *, role="Hedgies WL (CRO)"):
   else:
     print(f'User: {ctx.author.id} is not authorized')
 
+get_name(150380581723701250)
+get_uuid(150380581723701250)
 bot.run(TOKEN)
