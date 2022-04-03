@@ -128,8 +128,8 @@ async def rolecheck(ctx, *, role="Hedgies WL (CRO)"):
       # print(f'Checking if {member.name} belongs to {role} role')
       for r in member.roles:
           if r.name == role:
-            names[str(member.id)] = member.name
-            rolemembers.append(str(member.id))
+            # names[str(member.id)] = member.name
+            rolemembers.append(member.id)
     # print(f'Members in {role} role:\n{rolemembers}')
     count_roles = len(rolemembers)
     count_names = len(names.keys())
@@ -137,6 +137,4 @@ async def rolecheck(ctx, *, role="Hedgies WL (CRO)"):
   else:
     print(f'User: {ctx.author.id} is not authorized')
 
-get_name(150380581723701250)
-get_uuid(150380581723701250)
 bot.run(TOKEN)
