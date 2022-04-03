@@ -123,7 +123,6 @@ async def rolecheck(ctx, *, role="Hedgies WL (CRO)"):
     update_db()
     role = strip_at_bang(role)
     rolemembers = []
-    csv_string = '```\n'
     print(f'searching for role: {role}')
     for member in ctx.guild.members:
       # print(f'Checking if {member.name} belongs to {role} role')
@@ -131,13 +130,10 @@ async def rolecheck(ctx, *, role="Hedgies WL (CRO)"):
           if r.name == role:
             # names[str(member.id)] = member.name
             rolemembers.append(member.id)
-            csv_string += f'{member.name},{str(member.id)}\n'
     # print(f'Members in {role} role:\n{rolemembers}')
-    csv_string += f'\n```'
     count_roles = len(rolemembers)
     count_names = len(names.keys())
     await ctx.channel.send(f'Members in WL DB: {count_names} | Members with {role} role: {count_roles}')
-    await ctx.author.send(csv_string)
   else:
     print(f'User: {ctx.author.id} is not authorized')
 
