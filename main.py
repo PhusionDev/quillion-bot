@@ -129,7 +129,7 @@ async def rolecheck(ctx, *, role="Hedgies WL (CRO)"):
             rolemembers.append(str(member.id))
     # print(f'Members in {role} role:\n{rolemembers}')
     count_roles = len(rolemembers)
-    count_names = len(names)
+    count_names = len(names.keys())
     await ctx.channel.send(f'Members in WL DB: {count_names} | Members with {role} role: {count_roles}')
   else:
     print(f'User: {ctx.author.id} is not authorized')
