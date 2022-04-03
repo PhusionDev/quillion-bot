@@ -31,6 +31,8 @@ admins = {'150380581723701250': True}
 names = {}
 uuids = {}
 rolemembers = []
+newmembers = {}
+retiredmembers = {}
 
 last_db_datetime = datetime.datetime.now() - datetime.timedelta(hours=1)
 fetching = False
@@ -53,6 +55,13 @@ def get_value(str):
 
 def strip_at_bang(ab_str):
   return re.sub('[<>@!]*','',ab_str)
+
+def generate_csv(dict, title="Dict to CSV"):
+  csv_str = f'```{title} | Rows: {len(dict)}\n'
+  for k in dict.keys():
+    csv_str += f'{dict[k]},{k}\n'
+  csv_str += f'```'
+  return csv_str
 
 def update_db():
   global last_db_datetime
@@ -123,6 +132,8 @@ async def rolecheck(ctx, *, role="Hedgies WL (CRO)"):
     update_db()
     role = strip_at_bang(role)
     rolemembers = []
+    newmembers = {}
+    retiredmembers = {}
     print(f'searching for role: {role}')
     for member in ctx.guild.members:
       # print(f'Checking if {member.name} belongs to {role} role')
@@ -130,10 +141,32 @@ async def rolecheck(ctx, *, role="Hedgies WL (CRO)"):
           if r.name == role:
             # names[str(member.id)] = member.name
             rolemembers.append(member.id)
+            if not (member.id in names):
+              # print(f'{member.id}: {member.name} is a new role member')
+              newmembers[member.id] = member.name
+    for k in names:
+      # print(f'role checking id: {k}')
+      if not (k in rolemembers):
+        print(f'{k}: {names[k]} has been retired')
+        retiredmembers[k] = names[k]
     # print(f'Members in {role} role:\n{rolemembers}')
     count_roles = len(rolemembers)
     count_names = len(names.keys())
     await ctx.channel.send(f'Members in WL DB: {count_names} | Members with {role} role: {count_roles}')
+    if len(newmembers) > 0:
+      csv_new = generate_csv(newmembers,"New Members")
+      if len(newmembers) < 20:
+        await ctx.channel.send(csv_new)
+      else:
+        await ctx.channel.send(f'```20+ new members, too many to display; check logs```')
+        print(csv_new)
+    if len(retiredmembers) > 0:
+      csv_retired = generate_csv(retiredmembers, "Retired Members")
+      if len(retiredmembers) < 20:
+        await ctx.channel.send(csv_retired)
+      else:
+        await ctx.channel.send(f'```20+ retired members, too many to display; check logs```')
+        print(csv_retired)
   else:
     print(f'User: {ctx.author.id} is not authorized')
 
