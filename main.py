@@ -81,6 +81,8 @@ def update_db():
       fetching = False
       if wks_db_records != records:
         wks_db_records = records
+        uuids = {}
+        names = {}
         print("Debug: Records list has changed")
         for d in wks_db_records:
           if not d['ID'] == "":
@@ -142,8 +144,8 @@ async def rolecheck(ctx, *, role="Hedgies WL (CRO)"):
             # names[str(member.id)] = member.name
             rolemembers.append(member.id)
             if not (member.id in names):
-              # print(f'{member.id}: {member.name} is a new role member')
-              newmembers[member.id] = member.name
+              # print(f'{member.id}: {member} is a new role member')
+              newmembers[member.id] = member
     for k in names:
       # print(f'role checking id: {k}')
       if not (k in rolemembers):
