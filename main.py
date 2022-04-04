@@ -10,6 +10,7 @@ import datetime
 
 intents = discord.Intents.default()
 intents.members = True
+intents.guilds = True
 
 bot = commands.Bot(command_prefix='!', intents=intents)
 slash = SlashCommand(bot, sync_commands=True)
@@ -118,7 +119,7 @@ def has_role(member):
 
 # BOT COMMANDS
 
-@slash.slash(name="whitelist", guild_ids=[937228523964346440])
+@slash.slash(name="whitelist", description="Get whitelist information")
 async def _wl(ctx:SlashContext):
   message='Sorry, but you are not on the whitelist! :x:\nPlease stay tuned for opportunities to join the whitelist!'
   if has_role(ctx.author):
