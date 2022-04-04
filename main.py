@@ -124,7 +124,7 @@ async def wl(interaction: Interaction):
   if has_role(interaction.user):
     uuid = get_uuid(interaction.user.id)
     if (uuid):
-      message = f'Please visit -hidden during testing- to fill out the WL form\nYour Verify Code is:\n-hidden during testing-\nPlease do not share this code or your entry may be invalidated!'
+      message = f'Please visit https://forms.gle/VbEbptp6zq1RPns59 to fill out the WL form\nYour Verify Code is:\n{uuid}\nPlease do not share this code or your entry may be invalidated!'
     else:
       message = f'You have the WL role :white_check_mark:\nYou are on the whitelist :white_check_mark:\nBut your information has not been entered into the database yet :x:\nWe are updating the DB regularly as users earn the role\nPlease try again in a little while or message an admin'
   await interaction.response.send_message(message, ephemeral=True)
