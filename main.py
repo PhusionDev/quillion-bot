@@ -2,7 +2,7 @@ import os
 import re
 import json
 from google.oauth2.service_account import Credentials
-from discord_slash import SlashCommand
+from discord_slash import SlashCommand, SlashContext
 from discord.ext import commands
 import discord
 import gspread
@@ -123,7 +123,7 @@ def has_role(member):
   description="shows whitelist info",
   guild_ids=[937228523964346440]
 )
-async def wl(ctx):
+async def _wl(ctx:SlashContext):
   message='Sorry, but you are not on the whitelist! :x:\nPlease stay tuned for opportunities to join the whitelist!'
   if has_role(ctx.author):
     uuid = get_uuid(ctx.author.id)
