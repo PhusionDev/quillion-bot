@@ -1,19 +1,17 @@
 import os
 import re
 import json
-from google.oauth2.service_account import Credentials
-from discord_slash import SlashCommand, SlashContext
-from discord.ext import commands
-import discord
-import gspread
 import datetime
+# from google.oauth2.service_account import Credentials
+import gspread
+import nextcord
+from nextcord import Interaction
+from nextcord.ext import commands
 
-intents = discord.Intents.default()
+intents = nextcord.Intents.default()
 intents.members = True
-intents.guilds = True
 
 bot = commands.Bot(command_prefix='!', intents=intents)
-slash = SlashCommand(bot, sync_commands=True)
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 json_creds = os.getenv("GOOGLE_SHEETS_CREDS_JSON")
@@ -30,6 +28,7 @@ sh = sa.open("Quillion CRO Whitelist")
 wks_db = sh.worksheet("UUID Table")
 wks_db_records = {}
 
+guilds = [937228523964346440]
 admins = {'150380581723701250': True}
 names = {}
 uuids = {}
@@ -119,16 +118,16 @@ def has_role(member):
 
 # BOT COMMANDS
 
-@slash.slash(name="whitelist", description="Get whitelist information")
-async def _wl(ctx:SlashContext):
+@bot.slash_command(name="whitelist", description="get whitelist information", guild_ids=guilds)
+async def wl(interaction: Interaction):
   message='Sorry, but you are not on the whitelist! :x:\nPlease stay tuned for opportunities to join the whitelist!'
-  if has_role(ctx.author):
-    uuid = get_uuid(ctx.author.id)
+  if has_role(interaction.user):
+    uuid = get_uuid(interaction.user.id)
     if (uuid):
-      message = f'Please visit https://forms.gle/VbEbptp6zq1RPns59 to fill out the WL form\nYour Verify Code is:\n{uuid}\nPlease do not share this code or your entry may be invalidated!'
+      message = f'Please visit -hidden during testing- to fill out the WL form\nYour Verify Code is:\n-hidden during testing-\nPlease do not share this code or your entry may be invalidated!'
     else:
       message = f'You have the WL role :white_check_mark:\nYou are on the whitelist :white_check_mark:\nBut your information has not been entered into the database yet :x:\nWe are updating the DB regularly as users earn the role\nPlease try again in a little while or message an admin'
-  await ctx.send(message, hidden=True)
+  await interaction.response.send_message(message, ephemeral=True)
 
 # Whitelist Command
 @bot.command()
@@ -143,7 +142,7 @@ async def WL(ctx):
       message = f'Sorry you are not on the whitelist!'
     try:
       await ctx.author.send(message)
-    except discord.Forbidden:
+    except nextcord.Forbidden:
       pass
 
 # Role Check Command
@@ -191,5 +190,9 @@ async def rolecheck(ctx, *, role="Hedgies WL (CRO)"):
         print(csv_retired)
   else:
     print(f'User: {ctx.author.id} is not authorized')
+
+@bot.event
+async def on_ready():
+  print("The bot is now ready for use!")
 
 bot.run(TOKEN)

@@ -30,7 +30,7 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV "/private/var/admin/Desktop/Quillion Python/src/venv"
+set -gx VIRTUAL_ENV "/Users/jaredhodgkins/Organized/Projects/Python/quillion-bot/venv"
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/bin" $PATH
