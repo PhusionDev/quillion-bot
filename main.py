@@ -2,6 +2,7 @@ import os
 import re
 import json
 from google.oauth2.service_account import Credentials
+from discord_slash import SlashCommand
 from discord.ext import commands
 import discord
 import gspread
@@ -11,6 +12,7 @@ intents = discord.Intents.default()
 intents.members = True
 
 bot = commands.Bot(command_prefix='!', intents=intents)
+slash = SlashCommand(bot, sync_commands=True)
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 json_creds = os.getenv("GOOGLE_SHEETS_CREDS_JSON")
@@ -108,7 +110,28 @@ def get_name(user_id):
     print(f'{user_id}\'s name: {name}')
   return name
 
+def has_role(member):
+  for r in member.roles:
+    if r.name == "Hedgies WL (CRO)":
+      return True
+  return False
+
 # BOT COMMANDS
+
+@slash.slash(
+  name="whitelist",
+  description="shows whitelist info",
+  guild_ids=[937228523964346440]
+)
+async def wl(ctx):
+  message='Sorry, but you are not on the whitelist! :x:\nPlease stay tuned for opportunities to join the whitelist!'
+  if has_role(ctx.author):
+    uuid = get_uuid(ctx.author.id)
+    if (uuid):
+      message = f'Please visit https://forms.gle/VbEbptp6zq1RPns59 to fill out the WL form\nYour Verify Code is:\n{uuid}\nPlease do not share this code or your entry may be invalidated!'
+    else:
+      message = f'You have the WL role :white_check_mark:\nYou are on the whitelist :white_check_mark:\nBut your information has not been entered into the database yet :x:\nWe are updating the DB regularly as users earn the role\nPlease try again in a little while or message an admin'
+  await ctx.send(message, hidden=True)
 
 # Whitelist Command
 @bot.command()
