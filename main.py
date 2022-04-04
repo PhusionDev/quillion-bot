@@ -118,11 +118,7 @@ def has_role(member):
 
 # BOT COMMANDS
 
-@slash.slash(
-  name="whitelist",
-  description="shows whitelist info",
-  guild_ids=[937228523964346440]
-)
+@slash.slash(name="whitelist", guild_ids=[937228523964346440])
 async def _wl(ctx:SlashContext):
   message='Sorry, but you are not on the whitelist! :x:\nPlease stay tuned for opportunities to join the whitelist!'
   if has_role(ctx.author):
