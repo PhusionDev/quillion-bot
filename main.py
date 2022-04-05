@@ -28,6 +28,9 @@ sh = sa.open("Quillion CRO Whitelist")
 wks_db = sh.worksheet("UUID Table")
 wks_db_records = {}
 
+wks_config = sh.worksheet("Config")
+wks_config_records = {}
+
 guilds = [937228523964346440]
 admins = {'150380581723701250': True}
 names = {}
@@ -69,30 +72,39 @@ def update_db():
   global last_db_datetime
   global fetching
   global wks_db_records
-  global wks_db_records
+  global wks_config_records
   global names
   global uuids
+  global admins
   dt = datetime.datetime.now()
   dd = dt - last_db_datetime
   if (dd.seconds > 60):
     if not fetching:
       fetching = True
       print("Debug: last db update over 60s ago, fetching data")
-      records = wks_db.get_all_records()
+      records_db = wks_db.get_all_records()
+      records_config = wks_config.get_all_records()
       last_db_datetime = dt
       fetching = False
-      if wks_db_records != records:
-        wks_db_records = records
+      if wks_db_records != records_db:
+        wks_db_records = records_db
         uuids = {}
         names = {}
-        print("Debug: Records list has changed")
+        print("Debug: UUID Records list has changed")
         for d in wks_db_records:
           if not d['ID'] == "":
             uuids[d['ID']] = d['UUID']
             names[d['ID']] = d['Name']
         print(f'uuids: {len(uuids.keys())} | names: {len(names.keys())}')
-      else:
-        print("Debug: No records have been changed")
+      # check configuration updates
+      if wks_config_records != records_config:
+        wks_config_records = records_config
+        new_admins = {}
+        print("Configuration settings have changed")
+        for d in wks_config_records:
+          if not d['admin_id'] == "":
+            new_admins[d['admin_id']] = True
+        print(f'# of admins: {len(new_admins)}')
 
 def get_uuid(user_id):
   uuid = None
