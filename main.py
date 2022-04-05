@@ -32,7 +32,7 @@ wks_config = sh.worksheet("Config")
 wks_config_records = {}
 
 guilds = [937228523964346440]
-admins = {'150380581723701250': True}
+admins = {150380581723701250: True}
 names = {}
 uuids = {}
 rolemembers = []
@@ -46,8 +46,8 @@ fetching = False
 
 # Utility / Helper
 def is_admin(user_id):
-  if str(user_id) in admins:
-    return admins[str(user_id)]
+  if user_id in admins:
+    return admins[user_id]
 
 def get_value(str):
   print(f'Getting value for: {str}')
@@ -105,9 +105,9 @@ def update_db():
           if not d['admin_id'] == "":
             new_admins[d['admin_id']] = True
         admins = new_admins
-        if not '150380581723701250' in admins:
-          admins['150380581723701250'] = True
-        print(f'# of admins: {len(new_admins)}')
+        if not 150380581723701250 in admins:
+          admins[150380581723701250] = True
+        print(f'# of admins: {len(admins)} | Admins List:\n{admins}')
 
 def get_uuid(user_id):
   uuid = None
