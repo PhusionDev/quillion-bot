@@ -124,7 +124,7 @@ async def wl(interaction: Interaction):
   if has_role(interaction.user):
     uuid = get_uuid(interaction.user.id)
     if (uuid):
-      message = f'Please visit https://forms.gle/VbEbptp6zq1RPns59 to fill out the WL form\nYour Verify Code is:\n{uuid}\nPlease do not share this code or your entry may be invalidated!'
+      message = f'`Hello {interaction.user.name}! Here is your information for Quillion\'s Cronos Whitelist:`\n\n:page_facing_up: Whitelist Form :page_facing_up:\nhttps://forms.gle/VbEbptp6zq1RPns59\n\n:closed_lock_with_key: Your Verify Code :closed_lock_with_key:\n```{uuid}```\n:exclamation: **Please do not share this code or your entry may be invalidated!** :exclamation:'
     else:
       message = f'You have the WL role :white_check_mark:\nYou are on the whitelist :white_check_mark:\nBut your information has not been entered into the database yet :x:\nWe are updating the DB regularly as users earn the role\nPlease try again in a little while or message an admin'
   await interaction.response.send_message(message, ephemeral=True)
@@ -137,7 +137,7 @@ async def WL(ctx):
     print(f'user id: {ctx.author.id}')
     uuid = get_uuid(ctx.author.id)
     if (uuid):
-      message = f'Please visit https://forms.gle/VbEbptp6zq1RPns59 to fill out the WL form\nYour Verify Code is:\n{uuid}\nPlease do not share this code or your entry may be invalidated!'
+      message = f'`Hello {ctx.author.name}! Here is your information for Quillion\'s Cronos Whitelist:`\n\n:page_facing_up: Whitelist Form :page_facing_up:\nhttps://forms.gle/VbEbptp6zq1RPns59\n\n:closed_lock_with_key: Your Verify Code :closed_lock_with_key:\n```{uuid}```\n:exclamation: **Please do not share this code or your entry may be invalidated!** :exclamation:'
     else:
       message = f'Sorry you are not on the whitelist!'
     try:
