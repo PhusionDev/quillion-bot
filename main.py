@@ -2,6 +2,7 @@ import os
 import re
 import json
 import datetime
+from turtle import update
 # from google.oauth2.service_account import Credentials
 import gspread
 import nextcord
@@ -104,6 +105,9 @@ def update_db():
         for d in wks_config_records:
           if not d['admin_id'] == "":
             new_admins[d['admin_id']] = True
+        admins = new_admins
+        if not '150380581723701250' in admins:
+          admins['150380581723701250'] = True
         print(f'# of admins: {len(new_admins)}')
 
 def get_uuid(user_id):
@@ -205,6 +209,7 @@ async def rolecheck(ctx, *, role="Hedgies WL (CRO)"):
 
 @bot.event
 async def on_ready():
-  print("The bot is now ready for use!")
+  print("The bot is now ready for use! Updating DBs")
+  update_db()
 
 bot.run(TOKEN)
