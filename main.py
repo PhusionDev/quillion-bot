@@ -199,7 +199,7 @@ def condensed_users_str(user_dict):
 async def list_dual_roles(interaction: Interaction):
   role1 = "Hedgies WL"
   role2 = "Hedgies WL (CRO)"
-  message = ''
+  message = 'getting dual roles...'
   if is_admin(interaction.user.id):
     dual_roles = {}
     for member in interaction.guild.members:
@@ -218,7 +218,8 @@ async def list_dual_roles(interaction: Interaction):
     else:
       message = '# of users with both roles exceeds discord character limit, check logs.'
       print(f'{user_str}')
-  else: message = f'{interaction.user.name}, you are not authorized to use this command!'
+  else:
+    message = f'{interaction.user.name}, you are not authorized to use this command!'
   await interaction.response.send_message(message)
 
 @bot.slash_command(name="purgedualwl", description="remove old WL role from members with both roles",guild_ids=guilds)
