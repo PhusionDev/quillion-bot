@@ -213,11 +213,13 @@ async def list_dual_roles(interaction: Interaction):
       if roles["role1"] and roles["role2"]:
         dual_roles[member.id] = member.name
     user_str = condensed_users_str(dual_roles)
-    if len(user_str) <= 2000:
-      message = user_str
+    msg_count = f'# of members with both roles: {len(dual_roles.keys())}\n'
+    msg_combined = f'{msg_count}{user_str}'
+    if len(msg_combined) <= 2000:
+      message = msg_combined
     else:
       message = '# of users with both roles exceeds discord character limit, check logs.'
-      print(f'{user_str}')
+      print(f'{msg_combined}')
   else:
     message = f'{interaction.user.name}, you are not authorized to use this command!'
   await interaction.response.send_message(message)
