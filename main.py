@@ -222,7 +222,8 @@ async def purge_dual_roles(interaction: Interaction):
     if len(message + user_str) <= 2000:
       message += user_str
     print(f'{message}{user_str}')
-    await interaction.response.send_message(message)
+  else: message = f'{interaction.user.name}, you are not authorized to use this command@'
+  await interaction.response.send_message(message)
 
 @bot.slash_command(name="whitelist", description="get whitelist information", guild_ids=guilds)
 async def wl(interaction: Interaction):
