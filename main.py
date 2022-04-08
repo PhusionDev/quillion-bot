@@ -187,7 +187,37 @@ def wl_greeting_existing(name, id):
   message = f'Hello {name} you have already submitted **{num_entries[id]}** valid {entry_str}.\nYour most recent submission will be used:'
   return message
 
+def condensed_users_str(user_dict):
+  user_str = ''
+  for user_id in user_dict.keys():
+    user_str += f'<@{user_id}>'
+  return user_str
+
 # BOT COMMANDS
+
+@bot.slash_command(name="bothroles", description="get members in multiple roles",guild_ids=guilds)
+async def inroles(interaction: Interaction):
+  role1 = "Hedgies WL"
+  role2 = "Hedgies WL (CRO)"
+  if is_admin(interaction.user.id):
+    dual_roles = {}
+    for member in interaction.guild.members:
+      member_id = member.id
+      roles = {"role1": False, "role2": False}
+      for r in member.roles:
+        if r.name == role1:
+          roles["role1"] = True
+        if r.name == role2:
+          roles["role2"] = True
+      if roles["role1"] and roles["role2"]:
+        dual_roles[member.id] = member.name
+    user_str = condensed_users_str(dual_roles)
+    if len(user_str) <= 2000:
+      message = user_str
+    else:
+      print(dual_roles)
+      message = f'# of Members with both roles: {len(dual_roles.keys())}\nExceeds discord message character limit, check logs.'
+    await interaction.response.send_message(message)
 
 @bot.slash_command(name="whitelist", description="get whitelist information", guild_ids=guilds)
 async def wl(interaction: Interaction):
