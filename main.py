@@ -195,8 +195,8 @@ def condensed_users_str(user_dict):
 
 # BOT COMMANDS
 
-@bot.slash_command(name="bothroles", description="get members in multiple roles",guild_ids=guilds)
-async def inroles(interaction: Interaction):
+@bot.slash_command(name="purgedualwl", description="remove old WL role from members with both roles",guild_ids=guilds)
+async def purge_dual_roles(interaction: Interaction):
   role1 = "Hedgies WL"
   role2 = "Hedgies WL (CRO)"
   if is_admin(interaction.user.id):
@@ -211,12 +211,14 @@ async def inroles(interaction: Interaction):
           roles["role2"] = True
       if roles["role1"] and roles["role2"]:
         dual_roles[member.id] = member.name
+        #remove role 1
+        role = nextcord.utils.get(interaction.guild.roles, name=role1)
+        await member.remove_roles(role)
     user_str = condensed_users_str(dual_roles)
-    if len(user_str) <= 2000:
-      message = user_str
-    else:
-      print(dual_roles)
-      message = f'# of Members with both roles: {len(dual_roles.keys())}\nExceeds discord message character limit, check logs.'
+    message = f'Removed {role1} from {len(dual_roles.keys())} users.\n'
+    if len(message + user_str) <= 2000:
+      message += user_str
+    print(f'{message}{user_str}')
     await interaction.response.send_message(message)
 
 @bot.slash_command(name="whitelist", description="get whitelist information", guild_ids=guilds)
