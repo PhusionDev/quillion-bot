@@ -213,9 +213,12 @@ async def purge_dual_roles(interaction: Interaction):
         dual_roles[member.id] = member.name
         #remove role 1
         role = nextcord.utils.get(interaction.guild.roles, name=role1)
-        await member.remove_roles(role)
+        try:
+          await member.remove_roles(role)
+        except nextcord.Forbidden:
+          pass
     user_str = condensed_users_str(dual_roles)
-    message = f'Removed {role1} from {len(dual_roles.keys())} users.\n'
+    message = f'Removing {role1} from {len(dual_roles.keys())} users.\n'
     if len(message + user_str) <= 2000:
       message += user_str
     print(f'{message}{user_str}')
