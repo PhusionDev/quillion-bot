@@ -194,65 +194,90 @@ def condensed_users_str(user_dict):
   return user_str
 
 # BOT COMMANDS
-
-@bot.slash_command(name="listdualwl", description="remove old WL role from members with both roles",guild_ids=guilds)
-async def list_dual_roles(interaction: Interaction):
-  role1 = "Hedgies WL"
-  role2 = "Hedgies WL (CRO)"
-  message = 'getting dual roles...'
+@bot.slash_command(name="noentry", description="list members with WL role but no form entry", guild_ids=guilds)
+async def noentry(interaction: Interaction):
+  role_name = "Hedgies WL (CRO)"
+  message = f'Sorry {interaction.user.name}, but you are not authorized to use this command'
   if is_admin(interaction.user.id):
-    dual_roles = {}
+    message = "checking for users without an entry"
+    members_str = ""
+    update_db()
+    count = 0
     for member in interaction.guild.members:
-      member_id = member.id
-      roles = {"role1": False, "role2": False}
       for r in member.roles:
-        if r.name == role1:
-          roles["role1"] = True
-        if r.name == role2:
-          roles["role2"] = True
-      if roles["role1"] and roles["role2"]:
-        dual_roles[member.id] = member.name
-    user_str = condensed_users_str(dual_roles)
-    msg_count = f'# of members with both roles: {len(dual_roles.keys())}\n'
-    msg_combined = f'{msg_count}{user_str}'
-    if len(msg_combined) <= 2000:
-      message = msg_combined
+        if r.name == role_name:
+          if not member.id in valid_entries:
+            count += 1
+            members_str += f'<@{member.id}>'
+          break
+    long_message = f'Number of users without a WL submission: {count}\n{members_str}'
+    if len(message) < 2000:
+      message = long_message
     else:
-      message = '# of users with both roles exceeds discord character limit, check logs.'
-      print(f'{msg_combined}')
-  else:
-    message = f'{interaction.user.name}, you are not authorized to use this command!'
+      message = f'Number of users without a WL submission **{count}** exceeds character count\nCheck logs...'
+      print(long_message)
   await interaction.response.send_message(message)
 
-@bot.slash_command(name="purgedualwl", description="remove old WL role from members with both roles",guild_ids=guilds)
-async def purge_dual_roles(interaction: Interaction):
-  role1 = "Hedgies WL"
-  role2 = "Hedgies WL (CRO)"
-  if is_admin(interaction.user.id):
-    dual_roles = {}
-    for member in interaction.guild.members:
-      member_id = member.id
-      roles = {"role1": False, "role2": False}
-      for r in member.roles:
-        if r.name == role1:
-          roles["role1"] = True
-        if r.name == role2:
-          roles["role2"] = True
-      if roles["role1"] and roles["role2"]:
-        dual_roles[member.id] = member.name
-        #remove role 1
-        role = nextcord.utils.get(interaction.guild.roles, name=role1)
-        try:
-          await member.remove_roles(role)
-        except nextcord.Forbidden:
-          pass
-    user_str = condensed_users_str(dual_roles)
-    message = f'Removing {role1} from {len(dual_roles.keys())} users.\n'
-    if len(message + user_str) <= 2000:
-      message += user_str
-    print(f'{message}{user_str}')
-  else: message = f'{interaction.user.name}, you are not authorized to use this command@'
-  await interaction.response.send_message(message)
+# @bot.slash_command(name="listdualwl", description="remove old WL role from members with both roles",guild_ids=guilds)
+# async def list_dual_roles(interaction: Interaction):
+#   role1 = "Hedgies WL"
+#   role2 = "Hedgies WL (CRO)"
+#   message = 'getting dual roles...'
+#   if is_admin(interaction.user.id):
+#     dual_roles = {}
+#     for member in interaction.guild.members:
+#       member_id = member.id
+#       roles = {"role1": False, "role2": False}
+#       for r in member.roles:
+#         if r.name == role1:
+#           roles["role1"] = True
+#         if r.name == role2:
+#           roles["role2"] = True
+#       if roles["role1"] and roles["role2"]:
+#         dual_roles[member.id] = member.name
+#     user_str = condensed_users_str(dual_roles)
+#     msg_count = f'# of members with both roles: {len(dual_roles.keys())}\n'
+#     msg_combined = f'{msg_count}{user_str}'
+#     if len(msg_combined) <= 2000:
+#       message = msg_combined
+#     else:
+#       message = '# of users with both roles exceeds discord character limit, check logs.'
+#       print(f'{msg_combined}')
+#   else:
+#     message = f'{interaction.user.name}, you are not authorized to use this command!'
+#   await interaction.response.send_message(message)
+
+# @bot.slash_command(name="purgedualwl", description="remove old WL role from members with both roles",guild_ids=guilds)
+# async def purge_dual_roles(interaction: Interaction):
+#   role1 = "Hedgies WL"
+#   role2 = "Hedgies WL (CRO)"
+#   message = f'{interaction.user.name}, you are not authorized to use this command!'
+#   if is_admin(interaction.user.id):
+#     dual_roles = {}
+#     for member in interaction.guild.members:
+#       member_id = member.id
+#       roles = {"role1": False, "role2": False}
+#       for r in member.roles:
+#         if r.name == role1:
+#           roles["role1"] = True
+#         if r.name == role2:
+#           roles["role2"] = True
+#       if roles["role1"] and roles["role2"]:
+#         dual_roles[member.id] = member.name
+#         #remove role 1
+#         role = nextcord.utils.get(interaction.guild.roles, name=role1)
+#         try:
+#           await member.remove_roles(role)
+#         except nextcord.Forbidden:
+#           pass
+#     user_str = condensed_users_str(dual_roles)
+#     message = f'Removing {role1} from {len(dual_roles.keys())} users.\n'
+#     if len(message + user_str) <= 2000:
+#       message += user_str
+#     else:
+#       message = '# of users with both roles exceeds discord character limit, check logs.'
+#       print(f'{message}{user_str}')
+#   await interaction.response.send_message(message)
 
 @bot.slash_command(name="whitelist", description="get whitelist information", guild_ids=guilds)
 async def wl(interaction: Interaction):
