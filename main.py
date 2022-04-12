@@ -366,9 +366,9 @@ async def wlrand(ctx, rolename_entry="Giveaway", rolename_giveaway="Hedgies WL (
             for member in winners:
               await member.add_roles(role_giveaway)
               winner_str += ping_user_str(member.id)
-            await ctx.channel.send(f'Members in {rolename_entry} without {rolename_giveaway} role: {len(members)}\n\n{winner_str}')
+            await ctx.channel.send(f'Members of {rolename_entry} without {rolename_giveaway} role: {len(members)}\n\n{winner_str}')
           else:
-            message = f'# of winners cannot exceed amount of members in role!'
+            message = f'# of winners cannot exceed amount of members in entry role: {rolename_entry} without the giveaway role: {rolename_giveaway}\nPossible winners: {len(members)} < specified winners: {qty}'
             await ctx.channel.send(message)
     else:
       message = f'# of winners must be greater than 0!'
