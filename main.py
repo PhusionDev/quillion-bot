@@ -4,6 +4,7 @@ import json
 import datetime
 import gspread
 import nextcord
+import random
 from nextcord import Interaction
 from nextcord.ext import commands
 
@@ -62,8 +63,13 @@ def get_value(str):
   except ValueError:
     return None
 
+# strip user ID signature
 def strip_at_bang(ab_str):
   return re.sub('[<>@!]*','',ab_str)
+
+# strip role ID signature
+def clean_role(role):
+  return re.sub('[<>@&]*','',role)
 
 def generate_csv(dict, title="Dict to CSV"):
   csv_str = f'```{title} | Rows: {len(dict)}\n'
@@ -159,9 +165,9 @@ def get_name(user_id):
     print(f'{user_id}\'s name: {name}')
   return name
 
-def has_role(member):
+def has_role(member, rolename="Hedgies WL (CRO)"):
   for r in member.roles:
-    if r.name == "Hedgies WL (CRO)":
+    if r.name == rolename:
       return True
   return False
 
@@ -193,7 +199,35 @@ def condensed_users_str(user_dict):
     user_str += f'<@{user_id}>'
   return user_str
 
+def condensed_members_str(members):
+  user_str = ''
+  for member in members:
+    user_str += f'<@{member.id}>'
+  return user_str
+
+def ping_user_str(id):
+  return f'<@{id}>'
+
+def cleanse_int(value):
+  print(f'{value}: {type(value)}')
+  try:
+    return int(value)
+  except ValueError:
+    return -1
+  except Exception:
+    return -1
+
+def is_value(str):
+  try:
+    int(str)
+    return True
+  except ValueError:
+    return False
+
 # BOT COMMANDS
+
+# Slash Commands
+
 @bot.slash_command(name="noentry", description="list members with WL role but no form entry", guild_ids=guilds)
 async def noentry(interaction: Interaction):
   role_name = "Hedgies WL (CRO)"
@@ -297,6 +331,63 @@ async def wl(interaction: Interaction):
         message = wl_waiting_db(interaction.user.name)
   await interaction.response.send_message(message, ephemeral=True)
 
+# Normal Commands
+
+# random whitelist winner
+@bot.command()
+async def wlrand(ctx, rolename_entry="Giveaway", rolename_giveaway="Hedgies WL (CRO)", qty:int=1):
+  message = f'Sorry {ctx.author.name}, but you are not authorized'
+  if is_admin(ctx.author.id):
+    if qty > 0:
+      role_entry_str = clean_role(rolename_entry)
+      role_giveaway_str = clean_role(rolename_giveaway)
+      role_entry = nextcord.utils.get(ctx.guild.roles, id=int(role_entry_str)) if is_value(role_entry_str) else nextcord.utils.get(ctx.guild.roles, name=role_entry_str)
+      role_giveaway = nextcord.utils.get(ctx.guild.roles, id=int(role_giveaway_str)) if is_value(role_giveaway_str) else nextcord.utils.get(ctx.guild.roles, name=role_giveaway_str)
+      if role_entry == None:
+        await ctx.channel.send(f'Entry role invalid')
+      else:
+        if role_giveaway == None:
+          await ctx.channel.send(f'Giveaway role invalid')
+        else:
+          rolename_entry = role_entry.name
+          rolename_giveaway = role_giveaway.name
+          print(f'Entry Role: {rolename_entry} | Giveaway Role: {rolename_giveaway}')
+          members = []
+          # get list of members with role specified
+          for member in ctx.guild.members:
+            if has_role(member, rolename_entry):
+              if not has_role(member, rolename_giveaway):
+                members.append(member)
+          if qty <= len(members):
+            print(f'entry role: {rolename_entry}\ngiveaway role: {rolename_giveaway}\nqty: {qty}')
+            print(f'# of members with {rolename_entry} role: {len(members)}')
+            winners = random.sample(members, qty)
+            winner_str = ":tada: **Congratulations to the winners!** :tada:\n"
+            for member in winners:
+              await member.add_roles(role_giveaway)
+              winner_str += ping_user_str(member.id)
+            await ctx.channel.send(f'Members of {rolename_entry}: {condensed_members_str(members)}\n\n{winner_str}')
+          else:
+            message = f'# of winners cannot exceed amount of members in role!'
+            await ctx.channel.send(message)
+    else:
+      message = f'# of winners must be greater than 0!'
+      await ctx.channel.send(message)
+  else:
+    await ctx.channel.send(message)
+
+@wlrand.error
+async def wlrand_error(ctx, error):
+  if isinstance(error, commands.BadArgument):
+    if len(ctx.args) == 3:
+      await ctx.channel.send(f'Invalid value passed to giveaway quantity')
+    elif len(ctx.args) == 2:
+      await ctx.channel.send(f'Invalid giveaway role entered')
+    elif len(ctx.args) == 1:
+      await ctx.channel.send(f'Invalid required role entered')
+    else:
+      await ctx.channel.send(f'an error has occurred')
+
 # Whitelist Command
 @bot.command()
 async def WL(ctx):
@@ -342,8 +433,9 @@ async def rolecheck(ctx, *, role="Hedgies WL (CRO)"):
     for k in names:
       # print(f'role checking id: {k}')
       if not (k in rolemembers):
-        print(f'{k}: {names[k]} has been retired')
-        retiredmembers[k] = names[k]
+        if k <= 999999999999999999:
+          print(f'{k}: {names[k]} has been retired')
+          retiredmembers[k] = names[k]
     # print(f'Members in {role} role:\n{rolemembers}')
     count_roles = len(rolemembers)
     count_names = len(names.keys())
