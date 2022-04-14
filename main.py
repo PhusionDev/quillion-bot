@@ -25,17 +25,26 @@ creds_dict["private_key"] = creds_dict["private_key"].replace("\\\\n", "\n")
 sa = gspread.service_account_from_dict(creds_dict)
 sh = sa.open("Quillion CRO Whitelist")
 
+# UUID TABLE WORKSHEET AND RECORDS DICTIONARY #
 wks_db = sh.worksheet("UUID Table")
 wks_db_records = {}
 
+# CONFIG/ADMIN WORKSHEET AND RECORDS DICTIONARY #
 wks_config = sh.worksheet("Config")
 wks_config_records = {}
 
+# VALID ENTRIES WORKSHEET AND RECORDS DICTIONARY #
 wks_valid_entries = sh.worksheet("Parsed Responses")
 wks_valid_entries_records = {}
 
+# SERVER UNIQUE VALUES #
 guilds = [937228523964346440]
+wl_role_id = 958467891760627722
+
+# ADMINS LIST - AGENTBABS BY DEFAULT #
 admins = {150380581723701250: True}
+
+# APPLICATION LISTS / DICTIONARIES #
 valid_entries = {}
 names = {}
 uuids = {}
@@ -44,33 +53,67 @@ newmembers = {}
 retiredmembers = {}
 num_entries = {}
 
+# ESTABLISH LAST DB UDPATE #
 last_db_datetime = datetime.datetime.now() - datetime.timedelta(hours=1)
 fetching = False
 
-# Internal Functions
+# # # INTERNAL FUNCTIONS # # #
 
-# Utility / Helper
+# # UTILITY / HELPER FUNCTIONS # #
+
+# CHECK FOR USER IS AN ADMIN #
 def is_admin(user_id):
   if user_id in admins:
     return admins[user_id]
 
-def get_value(str):
-  print(f'Getting value for: {str}')
-  str = strip_at_bang(str)
-  print(f'Getting value for: {str}')
-  try:
-    return int(str)
-  except ValueError:
-    return None
-
-# strip user ID signature
-def strip_at_bang(ab_str):
+# STRIP CHANNEL ID SIGNATURE #
+def clean_channel(ab_str):
   return re.sub('[<>@!]*','',ab_str)
 
-# strip role ID signature
+# STRIP ROLE ID SIGNATURE #
 def clean_role(role):
-  return re.sub('[<>@&]*','',role)
+  return re.sub('[<>@&]*', '', role)
 
+# STRIP USER ID SIGNATURE #
+def clean_user(user_str):
+  return re.sub('[<>@]*', '', user_str)
+
+# GET UUID FOR USER ID #
+def get_uuid(user_id):
+  uuid = None
+  update_db()
+  if (user_id in uuids):
+    uuid = uuids[user_id]
+    print(f'{user_id}\'s UUID: {uuid}')
+  return uuid
+
+# GET NAME FOR USER ID #
+def get_name(user_id):
+  name = None
+  update_db()
+  if (user_id in names):
+    name = names[user_id]
+    print(f'{user_id}\'s name: {name}')
+  return name
+
+# CHECK IF MEMBER HAS A CERTAIN ROLE #
+def has_role(member, role_name):
+  for r in member.roles:
+    if r.name == role_name:
+      return True
+  return False
+
+# GET ROLE OBJECT FROM VARIOUS STRING FORMATS #
+async def get_role(guild, role_str):
+  role = None
+  role_str = clean_role(role_str)
+  if is_value(role_str):
+    role = nextcord.utils.get(guild.roles, id=int(role_str))
+  else:
+    role = nextcord.utils.get(guild.roles, name=role_str)
+  return role
+
+# GENERATE A CSV FROM DICTIONARY #
 def generate_csv(dict, title="Dict to CSV"):
   csv_str = f'```{title} | Rows: {len(dict)}\n'
   for k in dict.keys():
@@ -78,6 +121,9 @@ def generate_csv(dict, title="Dict to CSV"):
   csv_str += f'```'
   return csv_str
 
+# # UPDATE FUNCTIONS # #
+
+# UPDATE UUID TABLE RECORDS #
 def update_uuid_records(records_uuids):
   global uuids
   global names
@@ -93,6 +139,7 @@ def update_uuid_records(records_uuids):
         names[d['ID']] = d['Name']
     print(f'uuids: {len(uuids.keys())} | names: {len(names.keys())}')
 
+# UPDATE CONFIG / ADMIN RECORDS #
 def update_config_records(records_config):
   global admins
   global wks_config_records
@@ -108,6 +155,7 @@ def update_config_records(records_config):
       admins[150380581723701250] = True
     print(f'# of admins: {len(admins)} | Admins List:\n{admins}')
 
+# UPDATE VALID SUBMISSIONS / ENTRIES #
 def update_valid_entries_records(records_valid_entries):
   global wks_valid_entries_records
   global valid_entries
@@ -131,6 +179,7 @@ def update_valid_entries_records(records_valid_entries):
         valid_entries[id] = info_dict
     print(f'Valid Entries: {len(valid_entries)}')
 
+# UPDATE ENTIRE DATABASE #
 def update_db():
   global last_db_datetime
   global fetching
@@ -149,74 +198,54 @@ def update_db():
       update_config_records(records_config)
       update_valid_entries_records(records_valid_entries)
       
-def get_uuid(user_id):
-  uuid = None
-  update_db()
-  if (user_id in uuids):
-    uuid = uuids[user_id]
-    print(f'{user_id}\'s UUID: {uuid}')
-  return uuid
+# # HELPER MESSAGE FUNTIONS # #
 
-def get_name(user_id):
-  name = None
-  update_db()
-  if (user_id in names):
-    name = names[user_id]
-    print(f'{user_id}\'s name: {name}')
-  return name
-
-def has_role(member, rolename="Hedgies WL (CRO)"):
-  for r in member.roles:
-    if r.name == rolename:
-      return True
-  return False
-
+# SORRY NOT ON WHITELIST MESSAGE #
 def wl_sorry(name):
   message = f'Sorry, {name}, but you are not on the whitelist! :x:\nPlease stay tuned for opportunities to join the whitelist!'
   return message
 
+# USER'S WHITELIST INFO MESSAGE #
 def wl_info(uuid):
   message = f':page_facing_up: Whitelist Form :page_facing_up:\nhttps://forms.gle/VbEbptp6zq1RPns59\n\n:closed_lock_with_key: Your Verify Code :closed_lock_with_key:\n```{uuid}```\n:exclamation: **Please do not share this code or your entry may be invalidated!** :exclamation:'
   return message
 
+# WAITING FOR BACKEND UPDATE MESSAGE #
 def wl_waiting_db(name):
   message = f'Hello {name},\nYou have the WL role :white_check_mark:\nYou are on the whitelist :white_check_mark:\nBut your information has not been entered into the database yet :x:\nWe are updating the DB regularly as users earn the role\nPlease try again in a little while or message an admin'
   return message
 
+# GREETING NEW WL USER MESSAGE #
 def wl_greeting_new(name):
   message = f'`Hello {name}! Here is your information for Quillion\'s Cronos Whitelist:`'
   return message
 
+# GREETING EXISTING WL USER MESSAGE #
 def wl_greeting_existing(name, id):
   num = num_entries[id]
   entry_str = "entry" if num == 1 else "entries"
   message = f'Hello {name} you have already submitted **{num_entries[id]}** valid {entry_str}.\nYour most recent submission will be used:'
   return message
 
+# GENERATES STRING OF PINGABLE USERS FROM DICTIONARY WITH USER ID KEYS #
 def condensed_users_str(user_dict):
   user_str = ''
   for user_id in user_dict.keys():
     user_str += f'<@{user_id}>'
   return user_str
 
+# GENERATES STRING OF PINGABLE USERS FROM LIST OF MEMBER OBJECTS #
 def condensed_members_str(members):
   user_str = ''
   for member in members:
     user_str += f'<@{member.id}>'
   return user_str
 
+# RETURNS A STRING WITH PINGABLE USER ID FROM USER ID #
 def ping_user_str(id):
   return f'<@{id}>'
 
-def cleanse_int(value):
-  print(f'{value}: {type(value)}')
-  try:
-    return int(value)
-  except ValueError:
-    return -1
-  except Exception:
-    return -1
-
+# CHECKS IF A STRING CONTAINS A VALUE OR NOT #
 def is_value(str):
   try:
     int(str)
@@ -224,22 +253,31 @@ def is_value(str):
   except ValueError:
     return False
 
-# BOT COMMANDS
+# RETURNS THE CURRENT NAME OF THE ASSIGNED WL ROLE'S ID #
+async def get_wl_role_name(guild):
+  role = await get_role(guild, str(wl_role_id))
+  if role:
+    return role.name
+  else:
+    return "Invalid Role ID In Settings"
 
-# Slash Commands
+# # # BOT COMMANDS # # #
 
+# # SLASH COMMANDS # #
+
+# CHECK FOR WL MEMBERS WITHOUT AN ENTRY SUBMISSION #
 @bot.slash_command(name="noentry", description="list members with WL role but no form entry", guild_ids=guilds)
 async def noentry(interaction: Interaction):
-  role_name = "Hedgies WL (CRO)"
   message = f'Sorry {interaction.user.name}, but you are not authorized to use this command'
   if is_admin(interaction.user.id):
+    wl_role_name = await get_wl_role_name(interaction.guild)
     message = "checking for users without an entry"
     members_str = ""
     update_db()
     count = 0
     for member in interaction.guild.members:
       for r in member.roles:
-        if r.name == role_name:
+        if r.name == wl_role_name:
           if not member.id in valid_entries:
             count += 1
             members_str += f'<@{member.id}>'
@@ -250,7 +288,166 @@ async def noentry(interaction: Interaction):
     else:
       message = f'Number of users without a WL submission **{count}** exceeds character count\nCheck logs...'
       print(long_message)
-  await interaction.response.send_message(message)
+  await interaction.response.send_message(message, ephemeral=True)
+
+# WHITELIST INFORMATION SLASH COMMAND #
+@bot.slash_command(name="whitelist", description="get whitelist information", guild_ids=guilds)
+async def wl(interaction: Interaction):
+  wl_role_name = await get_wl_role_name(interaction.guild)
+  message=wl_sorry(interaction.user.name)
+  if has_role(interaction.user, wl_role_name):
+    uuid = get_uuid(interaction.user.id)
+    if interaction.user.id in valid_entries:
+      id = interaction.user.id
+      name = valid_entries[id]["name"]
+      wallet = valid_entries[id]["wallet"]
+      qty = valid_entries[id]["qty"]
+      message = f'{wl_greeting_existing(interaction.user.name, id)}\n```Name: {name}\nWallet Address: {wallet}\nQty: {qty}```\n\n`If you need to make changes, please submit another entry.`\n\n{wl_info(uuid)}'
+    else:
+      if (uuid):
+        message = f'{wl_greeting_new(interaction.user.name)}\n\n{wl_info(uuid)}'
+      else:
+        message = wl_waiting_db(interaction.user.name)
+  await interaction.response.send_message(message, ephemeral=True)
+
+# # NORMAL COMMANDS # #
+
+# RANDOM WL GIVEAWAY COMMAND #
+@bot.command()
+async def wlrand(ctx, rolename_entry, rolename_giveaway, qty:int=1):
+  message = f'Sorry {ctx.author.name}, but you are not authorized'
+  if is_admin(ctx.author.id):
+    if qty > 0:
+      role_entry = await get_role(ctx.guild, rolename_entry)
+      if role_entry == None:
+        await ctx.channel.send(f'Entry role invalid')
+      else:
+        role_giveaway = await get_role(ctx.guild, rolename_giveaway)
+        if role_giveaway == None:
+          await ctx.channel.send(f'Giveaway role invalid')
+        else:
+          rolename_entry = role_entry.name
+          rolename_giveaway = role_giveaway.name
+          print(f'Entry Role: {rolename_entry} | Giveaway Role: {rolename_giveaway}')
+          members = []
+          # get list of members with role specified
+          for member in ctx.guild.members:
+            if has_role(member, rolename_entry):
+              if not has_role(member, rolename_giveaway):
+                members.append(member)
+          if qty <= len(members):
+            # print(f'entry role: {rolename_entry}\ngiveaway role: {rolename_giveaway}\nqty: {qty}')
+            print(f'# of members with {rolename_entry} role: {len(members)}')
+            winners = random.sample(members, qty)
+            winner_str = ":tada: **Congratulations to the winners!** :tada:\n"
+            for member in winners:
+              await member.add_roles(role_giveaway)
+              winner_str += ping_user_str(member.id)
+            await ctx.channel.send(f'Members of **{rolename_entry}** without **{rolename_giveaway}** role: {len(members)}\n\n{winner_str}')
+          else:
+            message = f'# of winners cannot exceed amount of members in entry role: **{rolename_entry}** without the giveaway role: **{rolename_giveaway}**\nPossible winners: {len(members)} < specified winners: {qty}'
+            await ctx.channel.send(message)
+    else:
+      message = f'# of winners must be greater than 0!'
+      await ctx.channel.send(message)
+  else:
+    try:
+      await ctx.author.send(message)
+    except nextcord.Forbidden:
+      pass
+
+# RANDOM WL GIVEAWAY ERROR HANDLING #
+@wlrand.error
+async def wlrand_error(ctx, error):
+  if isinstance(error, commands.BadArgument):
+    if len(ctx.args) == 3:
+      await ctx.channel.send(f'Invalid value passed to giveaway quantity')
+    elif len(ctx.args) == 2:
+      await ctx.channel.send(f'Invalid giveaway role entered')
+    elif len(ctx.args) == 1:
+      await ctx.channel.send(f'Invalid required role entered')
+    else:
+      await ctx.channel.send(f'an error has occurred')
+
+# WHITELIST INFORMATION COMMAND #
+@bot.command()
+async def WL(ctx):
+  message=wl_sorry(ctx.author.name)
+  wl_role_name = await get_wl_role_name(ctx.guild)
+  if has_role(ctx.author, wl_role_name):
+    uuid = get_uuid(ctx.author.id)
+    if ctx.author.id in valid_entries:
+      id = ctx.author.id
+      name = valid_entries[id]["name"]
+      wallet = valid_entries[id]["wallet"]
+      qty = valid_entries[id]["qty"]
+      message = f'{wl_greeting_existing(ctx.author.name, id)}\n```Name: {name}\nWallet Address: {wallet}\nQty: {qty}```\n\n`If you need to make changes, please submit another entry.`\n\n{wl_info(uuid)}'
+    else:
+      if (uuid):
+        message = f'{wl_greeting_new(ctx.author.name)}\n\n{wl_info(uuid)}'
+      else:
+        message = wl_waiting_db(ctx.author.name)
+  try:
+    await ctx.author.send(message)
+  except nextcord.Forbidden:
+    pass
+
+# ROLE CHECK COMMAND #
+@bot.command()
+async def rolecheck(ctx, *, role_name=""):
+  global rolemembers
+  if is_admin(ctx.author.id):
+    update_db()
+    if role_name == "":
+      role_name = await get_wl_role_name(ctx.guild)
+    rolemembers = []
+    newmembers = {}
+    retiredmembers = {}
+    print(f'searching for role: {role_name}')
+    for member in ctx.guild.members:
+      # print(f'Checking if {member.name} belongs to {role} role')
+      for r in member.roles:
+          if r.name == role_name:
+            # names[str(member.id)] = member.name
+            rolemembers.append(member.id)
+            if not (member.id in names):
+              # print(f'{member.id}: {member} is a new role member')
+              newmembers[member.id] = member
+    for k in names:
+      # print(f'role checking id: {k}')
+      if not (k in rolemembers):
+        if k <= 999999999999999999:
+          print(f'{k}: {names[k]} has been retired')
+          retiredmembers[k] = names[k]
+    # print(f'Members in {role} role:\n{rolemembers}')
+    count_roles = len(rolemembers)
+    count_names = len(names.keys())
+    await ctx.channel.send(f'Members in WL DB: {count_names} | Members with {role_name} role: {count_roles}')
+    if len(newmembers) > 0:
+      csv_new = generate_csv(newmembers,"New Members")
+      if len(newmembers) < 20:
+        await ctx.channel.send(csv_new)
+      else:
+        await ctx.channel.send(f'```20+ new members, too many to display; check logs```')
+        print(csv_new)
+    if len(retiredmembers) > 0:
+      csv_retired = generate_csv(retiredmembers, "Retired Members")
+      if len(retiredmembers) < 20:
+        await ctx.channel.send(csv_retired)
+      else:
+        await ctx.channel.send(f'```20+ retired members, too many to display; check logs```')
+        print(csv_retired)
+  else:
+    print(f'User: {ctx.author.id} is not authorized')
+
+# BOT ON READY #
+@bot.event
+async def on_ready():
+  print("The bot is now ready for use! Updating DBs")
+  update_db()
+
+# RUN THE BOT #
+bot.run(TOKEN)
 
 # @bot.slash_command(name="listdualwl", description="remove old WL role from members with both roles",guild_ids=guilds)
 # async def list_dual_roles(interaction: Interaction):
@@ -312,154 +509,3 @@ async def noentry(interaction: Interaction):
 #       message = '# of users with both roles exceeds discord character limit, check logs.'
 #       print(f'{message}{user_str}')
 #   await interaction.response.send_message(message)
-
-@bot.slash_command(name="whitelist", description="get whitelist information", guild_ids=guilds)
-async def wl(interaction: Interaction):
-  message=wl_sorry(interaction.user.name)
-  if has_role(interaction.user):
-    uuid = get_uuid(interaction.user.id)
-    if interaction.user.id in valid_entries:
-      id = interaction.user.id
-      name = valid_entries[id]["name"]
-      wallet = valid_entries[id]["wallet"]
-      qty = valid_entries[id]["qty"]
-      message = f'{wl_greeting_existing(interaction.user.name, id)}\n```Name: {name}\nWallet Address: {wallet}\nQty: {qty}```\n\n`If you need to make changes, please submit another entry.`\n\n{wl_info(uuid)}'
-    else:
-      if (uuid):
-        message = f'{wl_greeting_new(interaction.user.name)}\n\n{wl_info(uuid)}'
-      else:
-        message = wl_waiting_db(interaction.user.name)
-  await interaction.response.send_message(message, ephemeral=True)
-
-# Normal Commands
-
-# random whitelist winner
-@bot.command()
-async def wlrand(ctx, rolename_entry="Giveaway", rolename_giveaway="Hedgies WL (CRO)", qty:int=1):
-  message = f'Sorry {ctx.author.name}, but you are not authorized'
-  if is_admin(ctx.author.id):
-    if qty > 0:
-      role_entry_str = clean_role(rolename_entry)
-      role_giveaway_str = clean_role(rolename_giveaway)
-      role_entry = nextcord.utils.get(ctx.guild.roles, id=int(role_entry_str)) if is_value(role_entry_str) else nextcord.utils.get(ctx.guild.roles, name=role_entry_str)
-      role_giveaway = nextcord.utils.get(ctx.guild.roles, id=int(role_giveaway_str)) if is_value(role_giveaway_str) else nextcord.utils.get(ctx.guild.roles, name=role_giveaway_str)
-      if role_entry == None:
-        await ctx.channel.send(f'Entry role invalid')
-      else:
-        if role_giveaway == None:
-          await ctx.channel.send(f'Giveaway role invalid')
-        else:
-          rolename_entry = role_entry.name
-          rolename_giveaway = role_giveaway.name
-          print(f'Entry Role: {rolename_entry} | Giveaway Role: {rolename_giveaway}')
-          members = []
-          # get list of members with role specified
-          for member in ctx.guild.members:
-            if has_role(member, rolename_entry):
-              if not has_role(member, rolename_giveaway):
-                members.append(member)
-          if qty <= len(members):
-            # print(f'entry role: {rolename_entry}\ngiveaway role: {rolename_giveaway}\nqty: {qty}')
-            print(f'# of members with {rolename_entry} role: {len(members)}')
-            winners = random.sample(members, qty)
-            winner_str = ":tada: **Congratulations to the winners!** :tada:\n"
-            for member in winners:
-              await member.add_roles(role_giveaway)
-              winner_str += ping_user_str(member.id)
-            await ctx.channel.send(f'Members of **{rolename_entry}** without **{rolename_giveaway}** role: {len(members)}\n\n{winner_str}')
-          else:
-            message = f':x:# of winners cannot exceed amount of members in entry role: **{rolename_entry}** without the giveaway role: **{rolename_giveaway}**\nPossible winners: {len(members)} < specified winners: {qty}'
-            await ctx.channel.send(message)
-    else:
-      message = f'# of winners must be greater than 0!'
-      await ctx.channel.send(message)
-  else:
-    await ctx.channel.send(message)
-
-@wlrand.error
-async def wlrand_error(ctx, error):
-  if isinstance(error, commands.BadArgument):
-    if len(ctx.args) == 3:
-      await ctx.channel.send(f'Invalid value passed to giveaway quantity')
-    elif len(ctx.args) == 2:
-      await ctx.channel.send(f'Invalid giveaway role entered')
-    elif len(ctx.args) == 1:
-      await ctx.channel.send(f'Invalid required role entered')
-    else:
-      await ctx.channel.send(f'an error has occurred')
-
-# Whitelist Command
-@bot.command()
-async def WL(ctx):
-  message=wl_sorry(ctx.author.name)
-  if has_role(ctx.author):
-    uuid = get_uuid(ctx.author.id)
-    if ctx.author.id in valid_entries:
-      id = ctx.author.id
-      name = valid_entries[id]["name"]
-      wallet = valid_entries[id]["wallet"]
-      qty = valid_entries[id]["qty"]
-      message = f'{wl_greeting_existing(ctx.author.name, id)}\n```Name: {name}\nWallet Address: {wallet}\nQty: {qty}```\n\n`If you need to make changes, please submit another entry.`\n\n{wl_info(uuid)}'
-    else:
-      if (uuid):
-        message = f'{wl_greeting_new(ctx.author.name)}\n\n{wl_info(uuid)}'
-      else:
-        message = wl_waiting_db(ctx.author.name)
-  try:
-    await ctx.author.send(message)
-  except nextcord.Forbidden:
-    pass
-
-# Role Check Command
-@bot.command()
-async def rolecheck(ctx, *, role="Hedgies WL (CRO)"):
-  global rolemembers
-  if is_admin(ctx.author.id):
-    update_db()
-    role = strip_at_bang(role)
-    rolemembers = []
-    newmembers = {}
-    retiredmembers = {}
-    print(f'searching for role: {role}')
-    for member in ctx.guild.members:
-      # print(f'Checking if {member.name} belongs to {role} role')
-      for r in member.roles:
-          if r.name == role:
-            # names[str(member.id)] = member.name
-            rolemembers.append(member.id)
-            if not (member.id in names):
-              # print(f'{member.id}: {member} is a new role member')
-              newmembers[member.id] = member
-    for k in names:
-      # print(f'role checking id: {k}')
-      if not (k in rolemembers):
-        if k <= 999999999999999999:
-          print(f'{k}: {names[k]} has been retired')
-          retiredmembers[k] = names[k]
-    # print(f'Members in {role} role:\n{rolemembers}')
-    count_roles = len(rolemembers)
-    count_names = len(names.keys())
-    await ctx.channel.send(f'Members in WL DB: {count_names} | Members with {role} role: {count_roles}')
-    if len(newmembers) > 0:
-      csv_new = generate_csv(newmembers,"New Members")
-      if len(newmembers) < 20:
-        await ctx.channel.send(csv_new)
-      else:
-        await ctx.channel.send(f'```20+ new members, too many to display; check logs```')
-        print(csv_new)
-    if len(retiredmembers) > 0:
-      csv_retired = generate_csv(retiredmembers, "Retired Members")
-      if len(retiredmembers) < 20:
-        await ctx.channel.send(csv_retired)
-      else:
-        await ctx.channel.send(f'```20+ retired members, too many to display; check logs```')
-        print(csv_retired)
-  else:
-    print(f'User: {ctx.author.id} is not authorized')
-
-@bot.event
-async def on_ready():
-  print("The bot is now ready for use! Updating DBs")
-  update_db()
-
-bot.run(TOKEN)
