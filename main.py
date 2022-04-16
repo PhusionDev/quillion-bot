@@ -45,6 +45,7 @@ wl_role_id = 958467891760627722
 admins = {150380581723701250: True}
 
 # APPLICATION LISTS / DICTIONARIES #
+filter_ids = [99999999999999999900]
 valid_entries = {}
 names = {}
 uuids = {}
@@ -134,7 +135,7 @@ def update_uuid_records(records_uuids):
     names = {}
     print("Debug: UUID Records list has changed")
     for d in wks_db_records:
-      if not d['ID'] == "":
+      if not d['ID'] == "" and not d['ID'] in filter_ids:
         uuids[d['ID']] = d['UUID']
         names[d['ID']] = d['Name']
     print(f'uuids: {len(uuids.keys())} | names: {len(names.keys())}')
