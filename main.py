@@ -45,7 +45,7 @@ wl_role_id = 958467891760627722
 admins = {150380581723701250: True}
 
 # APPLICATION LISTS / DICTIONARIES #
-filter_ids = [99999999999999999900]
+filter_ids = ["99999999999999999900"]
 valid_entries = {}
 names = {}
 uuids = {}
@@ -66,6 +66,11 @@ fetching = False
 def is_admin(user_id):
   if user_id in admins:
     return admins[user_id]
+
+def is_filtered_id(id):
+  if str(id) in filter_ids:
+    return True
+  return False
 
 # STRIP CHANNEL ID SIGNATURE #
 def clean_channel(ab_str):
@@ -137,7 +142,7 @@ def update_uuid_records(records_uuids):
     for d in wks_db_records:
       user_id = d['ID']
       if not user_id == "":
-        if not user_id in filter_ids:
+        if not is_filtered_id(user_id):
           uuids[user_id] = d['UUID']
           names[user_id] = d['Name']
         else:
