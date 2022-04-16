@@ -290,6 +290,78 @@ async def noentry(interaction: Interaction):
       print(long_message)
   await interaction.response.send_message(message, ephemeral=True)
 
+# CHECK FOR WL MEMBERS WITHOUT AN ENTRY SUBMISSION FILTER TEAM MEMBERS #
+@bot.slash_command(name="noentryf", description="list members with WL role but no form entry", guild_ids=guilds)
+async def noentryf(interaction: Interaction):
+  message = f'Sorry {interaction.user.name}, but you are not authorized to use this command'
+  if is_admin(interaction.user.id):
+    filters = ["Board Member", "Trustee", "Founder", "Hedgie Admin"]
+    wl_role_name = await get_wl_role_name(interaction.guild)
+    message = "checking for users without an entry"
+    members_str = ""
+    update_db()
+    count = 0
+    # Build initial list of members with WL role
+    for member in interaction.guild.members:
+      filter_member = False
+      has_wl_role = False
+      roles = []
+      for role in member.roles:
+        roles.append(role.name)
+      if wl_role_name in roles:
+        has_wl_role = True
+      for frole in filters:
+        if frole in roles:
+          filter_member = True
+          break
+      if has_wl_role and not filter_member:
+        if not member.id in valid_entries:
+          count += 1
+          members_str += f'<@{member.id}>'
+    long_message = f'Number of users without a WL submission: {count}\n{members_str}'
+    if len(message) < 2000:
+      message = long_message
+    else:
+      message = f'Number of users without a WL submission **{count}** exceeds character count\nCheck logs...'
+      print(long_message)
+  await interaction.response.send_message(message)
+
+# CHECK FOR WL MEMBERS WITHOUT AN ENTRY SUBMISSION TEAM MEMBERS ONLY #
+@bot.slash_command(name="noentryt", description="list members with WL role but no form entry", guild_ids=guilds)
+async def noentryt(interaction: Interaction):
+  message = f'Sorry {interaction.user.name}, but you are not authorized to use this command'
+  if is_admin(interaction.user.id):
+    includes = ["Board Member", "Trustee", "Founder", "Hedgie Admin"]
+    wl_role_name = await get_wl_role_name(interaction.guild)
+    message = "checking for users without an entry"
+    members_str = ""
+    update_db()
+    count = 0
+    # Build initial list of members with WL role
+    for member in interaction.guild.members:
+      include_member = False
+      has_wl_role = False
+      roles = []
+      for role in member.roles:
+        roles.append(role.name)
+      if wl_role_name in roles:
+        has_wl_role = True
+      for irole in includes:
+        if irole in roles:
+          include_member = True
+          break
+      if has_wl_role and include_member:
+        if not member.id in valid_entries:
+          count += 1
+          members_str += f'<@{member.id}>'
+    long_message = f'Team members without a WL submission: {count}\n{members_str}'
+    if len(message) < 2000:
+      message = long_message
+    else:
+      message = f'Number of users without a WL submission **{count}** exceeds character count\nCheck logs...'
+      print(long_message)
+  await interaction.response.send_message(message)
+
 # WHITELIST INFORMATION SLASH COMMAND #
 @bot.slash_command(name="whitelist", description="get whitelist information", guild_ids=guilds)
 async def wl(interaction: Interaction):
