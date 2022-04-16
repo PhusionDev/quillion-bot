@@ -135,9 +135,13 @@ def update_uuid_records(records_uuids):
     names = {}
     print("Debug: UUID Records list has changed")
     for d in wks_db_records:
-      if not d['ID'] == "" and not d['ID'] in filter_ids:
-        uuids[d['ID']] = d['UUID']
-        names[d['ID']] = d['Name']
+      user_id = d['ID']
+      if not user_id == "":
+        if not user_id in filter_ids:
+          uuids[user_id] = d['UUID']
+          names[user_id] = d['Name']
+        else:
+          print(f'Found filtered id: {user_id}: {d["Name"]}')
     print(f'uuids: {len(uuids.keys())} | names: {len(names.keys())}')
 
 # UPDATE CONFIG / ADMIN RECORDS #
