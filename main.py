@@ -237,6 +237,9 @@ def wl_greeting_existing(name, id):
   message = f'Hello {name} you have already submitted **{num_entries[id]}** valid {entry_str}.\nYour most recent submission will be used:'
   return message
 
+def log_unauthorized(name, command):
+  print(f'UNAUTHORIZED | {name} has attempted to use command: {command}')
+
 # GENERATES STRING OF PINGABLE USERS FROM DICTIONARY WITH USER ID KEYS #
 def condensed_users_str(user_dict):
   user_str = ''
@@ -473,6 +476,33 @@ async def WL(ctx):
     await ctx.author.send(message)
   except nextcord.Forbidden:
     pass
+
+@bot.command()
+async def log_user_info(ctx, id):
+  if is_admin(ctx.author.id):
+    id = clean_user(id)
+    if is_value(id):
+      id = int(id)
+      if id in uuids:
+        print(f'User ID: {id} | Name: {names[id]} | UUID: {uuids[id]}')
+      else:
+        print(f'User ID: {id} not found in valid uuids/names')
+  else:
+    log_unauthorized(ctx.author.name, "LOG_USER_INFO")
+
+@bot.command()
+async def log_names(ctx):
+  if is_admin(ctx.author.id):
+    print(names)
+  else:
+    log_unauthorized(ctx.author.name, "LOG_NAMES")
+
+@bot.command()
+async def log_uuids(ctx):
+  if is_admin(ctx.author.id):
+    print(uuids)
+  else:
+    log_unauthorized(ctx.author.name, "LOG_UUIDS")
 
 # ROLE CHECK COMMAND #
 @bot.command()
