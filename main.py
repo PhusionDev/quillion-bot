@@ -45,7 +45,7 @@ wl_role_id = 958467891760627722
 admins = {150380581723701250: True}
 
 # APPLICATION LISTS / DICTIONARIES #
-filter_ids = ["99999999999999999900"]
+filter_ids = [99999999999999999900]
 valid_entries = {}
 names = {}
 uuids = {}
@@ -67,11 +67,6 @@ def is_admin(user_id):
   if user_id in admins:
     return admins[user_id]
 
-def is_filtered_id(id):
-  if str(id) in filter_ids:
-    return True
-  return False
-
 # STRIP CHANNEL ID SIGNATURE #
 def clean_channel(ab_str):
   return re.sub('[<>@!]*','',ab_str)
@@ -90,7 +85,8 @@ def get_uuid(user_id):
   update_db()
   if (user_id in uuids):
     uuid = uuids[user_id]
-    print(f'{user_id}\'s UUID: {uuid}')
+    if user_id in names:
+      print(f'[{user_id}] {names[user_id]}\'s UUID: {uuid}')
   return uuid
 
 # GET NAME FOR USER ID #
@@ -142,7 +138,7 @@ def update_uuid_records(records_uuids):
     for d in wks_db_records:
       user_id = d['ID']
       if not user_id == "":
-        if not is_filtered_id(user_id):
+        if not user_id in filter_ids:
           uuids[user_id] = d['UUID']
           names[user_id] = d['Name']
         else:
@@ -377,7 +373,7 @@ async def noentryt(interaction: Interaction):
 
 # WHITELIST INFORMATION SLASH COMMAND #
 @bot.slash_command(name="whitelist", description="get whitelist information", guild_ids=guilds)
-async def wl(interaction: Interaction):
+async def whitelist(interaction: Interaction):
   wl_role_name = await get_wl_role_name(interaction.guild)
   message=wl_sorry(interaction.user.name)
   if has_role(interaction.user, wl_role_name):
@@ -476,6 +472,10 @@ async def WL(ctx):
     await ctx.author.send(message)
   except nextcord.Forbidden:
     pass
+
+@bot.command()
+async def wl(ctx):
+  await WL(ctx)
 
 @bot.command()
 async def log_user_info(ctx, id):
